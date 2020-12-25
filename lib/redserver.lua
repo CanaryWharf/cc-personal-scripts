@@ -16,16 +16,17 @@ end
 
 function RedServer:listenForRequests()
     rednet.open(self.modemSide)
-    senderId, message = rednet.receive()
+    local senderId, message = rednet.receive()
     rednet.close(self.modemSide)
     return senderId, textutils.unserialize(message)
 end
 
 
 function RedServer:processRequest(message)
-    requestType = message.requestType
-    messageArgs = message.args
-    response = self.orderMap[requestType](messageArgs)
+    local requestType = message.requestType
+    local messageArgs = message.args
+    local response = self.orderMap[requestType](messageArgs)
+    return response
 end
 
 function RedServer:sendResponse(recipientId, response)
@@ -35,9 +36,9 @@ function RedServer:sendResponse(recipientId, response)
 end
 
 function RedServer:serverLoop()
-    senderId, message = self.listenForRequests()
-    response = self.processRequest(message)
-    sendResponse(senderId, response)
+    local senderId, message = self.listenForRequests()
+    local response = self.processRequest(message)
+    self.sendResponse(senderId, response)
 end
 
 function RedServer:serve()
