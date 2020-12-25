@@ -45,5 +45,4 @@ function main()
     end
 end
 
-
-print(getItemcount(tab))
+main()
