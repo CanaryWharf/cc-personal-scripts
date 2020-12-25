@@ -1,48 +1,47 @@
-MODEM_SIDE = "top"
+-- Server metaclass
+RedServer = {}
 
-function getItemCount(tab)
-    return 0
+--- Create a new redserver
+-- @param side rednet is connected to
+-- @param order map, key with the request type (in header)
+--        and value being the function that will be called
+function RedServer:new(modemSide, orderMap)
+    serverInstance = {
+        modemSide = modemSide,
+        orderMap = orderMap,
+    }
+    self.__index = self
+    return setmetatable(serverInstance, self)
 end
 
-function findItem(tab)
-    return 9
-end
-
-ORDER_MAP = {
-    ["count"] = getItemcount,
-    ["find"] = findItem,
-}
-
-function listenForRequests()
-    rednet.open(MODEM_SIDE)
+function RedServer:listenForRequests()
+    rednet.open(self.modemSide)
     senderId, message = rednet.receive()
-    rednet.close(MODEM_SIDE)
+    rednet.close(self.modemSide)
     return senderId, textutils.unserialize(message)
 end
 
 
-function processRequest(message)
+function RedServer:processRequest(message)
     requestType = message.requestType
     messageArgs = message.args
-    response = ORDER_MAP[requestType](messageArgs)
+    response = self.orderMap[requestType](messageArgs)
 end
 
-function sendResponse(recipientId, response)
-    rednet.open(MODEM_SIDE)
+function RedServer:sendResponse(recipientId, response)
+    rednet.open(self.modemSide)
     rednet.send(recipientId, textutils.serialize(response))
-    rednet.close(MODEM_SIDE)
+    rednet.close(self.modemSide)
 end
 
-function serverLoop()
-    senderId, message = listenForRequests()
-    response = processRequest(message)
+function RedServer:serverLoop()
+    senderId, message = self.listenForRequests()
+    response = self.processRequest(message)
     sendResponse(senderId, response)
 end
 
-function main()
+function RedServer:serve()
     while true do
-        serverLoop()
+        self.serverLoop()
     end
 end
-
-main()
